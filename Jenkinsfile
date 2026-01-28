@@ -1,6 +1,7 @@
 pipeline {
     agent any
     environment {
+        // This ID matches your 'image_96e07d.png' dropdown
         DOCKERHUB_CREDENTIALS = credentials('docker-hub-credentials-id') 
         APP_NAME = "devops-bootcamp-project"
         DOCKER_USER = "harishdockeremc" 
@@ -11,24 +12,29 @@ pipeline {
         }
         stage('Unit Test') {
             steps {
-                sh 'python3 test_app.py'
+                // Changed 'sh' to 'bat' and 'python3' to 'python' for Windows
+                bat 'python test_app.py'
             }
         }
         stage('SonarQube Analysis') {
             steps {
                 script {
                     def scannerHome = tool 'SonarScanner' 
-                    withSonarQubeEnv('SonarQubeServer') { 
-                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=${APP_NAME}"
+                    withSonarQubeEnv('sonarserver') { 
+                        bat "${scannerHome}\\bin\\sonar-scanner.bat -Dsonar.projectKey=devops-bootcamp-project"
                     }
                 }
             }
         }
         stage('Docker Build & Push') {
             steps {
-                sh "docker build -t ${DOCKER_USER}/${APP_NAME}:${BUILD_NUMBER} ."
-                sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
-                sh "docker push ${DOCKER_USER}/${APP_NAME}:${BUILD_NUMBER}"
+                // Using 'bat' and Windows variable syntax %VAR%
+                bat "docker build -t %DOCKER_USER%/%APP_NAME%:%BUILD_NUMBER% ."
+                
+                // For login, we use the specific DOCKERHUB_CREDENTIALS variables
+                bat "echo %DOCKERHUB_CREDENTIALS_PSW% | docker login -u %DOCKERHUB_CREDENTIALS_USR% --password-stdin"
+                
+                bat "docker push %DOCKER_USER%/%APP_NAME%:%BUILD_NUMBER%"
             }
         }
     }
