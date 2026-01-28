@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        // This ID matches your 'image_96e07d.png' dropdown
+        // Must match the ID in your Jenkins credentials dropdown
         DOCKERHUB_CREDENTIALS = credentials('docker-hub-credentials-id') 
         APP_NAME = "devops-bootcamp-project"
         DOCKER_USER = "harishdockeremc" 
@@ -12,7 +12,7 @@ pipeline {
         }
         stage('Unit Test') {
             steps {
-                // Changed 'sh' to 'bat' and 'python3' to 'python' for Windows
+                // This already worked in your last run! (image_960ea5.png)
                 bat 'python test_app.py'
             }
         }
@@ -20,6 +20,7 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'SonarScanner' 
+                    // Matches the 'Name' in your System settings (image_95fb23.png)
                     withSonarQubeEnv('sonarserver') { 
                         bat "${scannerHome}\\bin\\sonar-scanner.bat -Dsonar.projectKey=devops-bootcamp-project"
                     }
@@ -28,12 +29,9 @@ pipeline {
         }
         stage('Docker Build & Push') {
             steps {
-                // Using 'bat' and Windows variable syntax %VAR%
+                // Use Windows %VAR% syntax for batch commands
                 bat "docker build -t %DOCKER_USER%/%APP_NAME%:%BUILD_NUMBER% ."
-                
-                // For login, we use the specific DOCKERHUB_CREDENTIALS variables
-                bat "echo %DOCKERHUB_CREDENTIALS_PSW% | docker login -u %DOCKERHUB_CREDENTIALS_USR% --password-stdin"
-                
+                bat "echo %DOCKERHUB_CREDENTIALS_PSW% | docker login -u %DOCKER_USER% --password-stdin"
                 bat "docker push %DOCKER_USER%/%APP_NAME%:%BUILD_NUMBER%"
             }
         }
